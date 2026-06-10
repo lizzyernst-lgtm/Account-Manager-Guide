@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rep Reference Doc</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f4f5f7; color: #1a1a2e; min-height: 100vh; }
+  .top-bar { background: #1a1a2e; padding: 12px 20px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .top-bar h1 { font-size: 16px; font-weight: 600; color: #ffffff; letter-spacing: .01em; }
+  .top-bar .badge { font-size: 11px; background: #2d6cdf; color: #fff; padding: 2px 10px; border-radius: 20px; font-weight: 500; }
+  .search-wrap { margin-left: auto; position: relative; }
+  .search-input { padding: 7px 14px 7px 34px; border-radius: 20px; border: 1.5px solid #3a3f56; background: #2d3250; color: #ffffff; font-size: 13px; width: 220px; outline: none; transition: all .15s; }
+  .search-input::placeholder { color: #6b7494; }
+  .search-input:focus { border-color: #4d7cfe; background: #333859; width: 260px; }
+  .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #6b7494; font-size: 15px; pointer-events: none; }
+  .search-clear { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #6b7494; font-size: 14px; cursor: pointer; display: none; background: none; border: none; padding: 0; line-height: 1; }
+  .search-clear:hover { color: #ffffff; }
+
+  /* SEARCH RESULTS PANEL */
+  .search-results { display: none; padding: 12px 20px 24px; }
+  .search-results.active { display: block; }
+  .search-results h2 { font-size: 14px; font-weight: 600; color: #555e7a; margin-bottom: 12px; }
+  .result-item { background: #ffffff; border: 1.5px solid #e2e6f0; border-radius: 10px; padding: 12px 16px; margin-bottom: 8px; cursor: pointer; transition: border-color .15s, box-shadow .15s; }
+  .result-item:hover { border-color: #4d7cfe; box-shadow: 0 2px 8px rgba(77,124,254,.12); }
+  .result-tab { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #888fa8; margin-bottom: 4px; }
+  .result-title { font-size: 13px; font-weight: 600; color: #1a1a2e; margin-bottom: 3px; }
+  .result-snippet { font-size: 12px; color: #555e7a; line-height: 1.6; }
+  .result-snippet mark { background: #fef3c7; color: #92400e; border-radius: 2px; padding: 0 2px; font-style: normal; }
+  .no-results { font-size: 13px; color: #888fa8; padding: 20px 0; text-align: center; }
+
+  .nav { display: flex; gap: 6px; padding: 14px 20px 0; flex-wrap: wrap; background: #f4f5f7; }
+  .nav-btn { padding: 7px 16px; border-radius: 20px; border: 1.5px solid #d0d5e0; background: #ffffff; cursor: pointer; font-size: 13px; font-weight: 500; color: #555e7a; transition: all .15s; }
+  .nav-btn:hover { background: #eef0f8; border-color: #b0b8d0; color: #1a1a2e; }
+  .nav-btn.active { background: #1a1a2e; color: #ffffff; border-color: #1a1a2e; }
+  .section { display: none; padding: 16px 20px 32px; }
+  .section.active { display: block; }
+  h2 { font-size: 17px; font-weight: 600; color: #1a1a2e; margin-bottom: 14px; }
+  h3 { font-size: 11px; font-weight: 600; color: #888fa8; text-transform: uppercase; letter-spacing: .07em; margin: 18px 0 8px; }
+
+  .pipeline { display: flex; flex-direction: column; gap: 5px; }
+  .stage-wrap { border-radius: 10px; overflow: hidden; border: 1.5px solid #e2e6f0; }
+  .stage-row { display: flex; align-items: stretch; cursor: pointer; transition: opacity .1s; }
+  .stage-row:hover { opacity: .92; }
+  .stage-badge { width: 230px; flex-shrink: 0; padding: 11px 14px; display: flex; align-items: center; gap: 9px; }
+  .stage-num { font-size: 11px; opacity: .6; font-weight: 600; }
+  .stage-name { font-size: 13px; font-weight: 600; }
+  .stage-arrow { width: 30px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: #f8f9fc; border-left: 1.5px solid #e2e6f0; font-size: 12px; color: #888; transition: transform .15s; }
+  .stage-arrow.open { transform: rotate(90deg); }
+  .stage-detail { display: none; padding: 14px 16px; background: #fafbfd; border-top: 1.5px solid #e2e6f0; }
+  .stage-detail.open { display: block; }
+  .stage-detail ul { padding-left: 18px; }
+  .stage-detail li { font-size: 13px; color: #3a3f56; line-height: 1.7; margin-bottom: 5px; }
+  .stage-detail li strong { color: #1a1a2e; }
+  .info-box { margin-top: 10px; padding: 9px 13px; border-radius: 7px; font-size: 12px; line-height: 1.65; }
+  .info-box.tip { background: #e8f0fe; color: #1a56db; border-left: 3px solid #3b82f6; }
+  .info-box.warn { background: #fff7e6; color: #b45309; border-left: 3px solid #f59e0b; }
+  .sub-section { margin-top: 12px; padding: 11px 13px; border-radius: 8px; border: 1.5px solid #e2e6f0; background: #ffffff; }
+  .sub-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #555e7a; margin-bottom: 8px; }
+  .invoice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 10px 0; }
+  .invoice-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: #888fa8; margin-bottom: 4px; }
+  .invoice-val { font-size: 12px; font-family: monospace; color: #3a3f56; line-height: 1.9; }
+
+  .c-syn  { background: #ede9fe; color: #4c1d95; border-left: 4px solid #7c3aed; }
+  .c-rev  { background: #fef3c7; color: #92400e; border-left: 4px solid #f59e0b; }
+  .c-pend { background: #fff7ed; color: #9a3412; border-left: 4px solid #f97316; }
+  .c-app  { background: #dcfce7; color: #14532d; border-left: 4px solid #16a34a; }
+  .c-inv  { background: #dbeafe; color: #1e3a8a; border-left: 4px solid #2563eb; }
+  .c-term { background: #ede9fe; color: #3730a3; border-left: 4px solid #6366f1; }
+  .c-acc  { background: #ffedd5; color: #7c2d12; border-left: 4px solid #ea580c; }
+  .c-docs { background: #dcfce7; color: #14532d; border-left: 4px solid #15803d; }
+  .c-comp { background: #f1f5f9; color: #334155; border-left: 4px solid #94a3b8; }
+  .c-fund { background: #ccfbf1; color: #134e4a; border-left: 4px solid #0d9488; }
+  .c-del  { background: #ffe4e6; color: #881337; border-left: 4px solid #e11d48; }
+
+  .time-block { display: flex; gap: 12px; margin-bottom: 10px; }
+  .time-label { font-size: 12px; font-weight: 600; color: #555e7a; min-width: 110px; padding-top: 11px; }
+  .time-card { flex: 1; padding: 11px 14px; border-radius: 9px; border: 1.5px solid #e2e6f0; background: #ffffff; font-size: 13px; color: #3a3f56; line-height: 1.65; }
+  .time-card strong { color: #1a1a2e; }
+  .pri-list { padding-left: 18px; margin-top: 6px; }
+  .pri-list li { font-size: 13px; color: #3a3f56; line-height: 1.8; list-style: disc; }
+  .section-divider { font-size: 11px; font-weight: 700; color: #ffffff; background: #1a1a2e; padding: 5px 12px; border-radius: 6px; display: inline-block; margin: 14px 0 10px; }
+
+  .state-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .state-card { padding: 12px 14px; border-radius: 9px; border: 1.5px solid #e2e6f0; background: #ffffff; }
+  .state-card-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
+  .state-desc { font-size: 12px; color: #555e7a; margin-bottom: 8px; line-height: 1.5; }
+  .state-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+  .stag { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 10px; }
+  .stag-y { background: #fef3c7; color: #92400e; }
+  .stag-r { background: #fee2e2; color: #991b1b; }
+  .stag-g { background: #f1f5f9; color: #475569; }
+  .full { grid-column: 1 / -1; }
+  .danger-card { border-color: #fca5a5 !important; background: #fff5f5 !important; }
+
+  .em-card { margin-bottom: 10px; padding: 12px 14px; border-radius: 9px; background: #ffffff; border: 1.5px solid #e2e6f0; }
+  .em-type { font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; margin-bottom: 5px; }
+  .em-int { color: #555e7a; }
+  .em-vend { color: #1a56db; }
+  .em-body { font-size: 13px; color: #3a3f56; line-height: 1.65; }
+  .em-body strong { color: #1a1a2e; }
+  .em-example { margin-top: 8px; padding: 8px 12px; background: #f8f9fc; border-radius: 6px; font-size: 12px; color: #555e7a; font-style: italic; border-left: 3px solid #d0d5e0; }
+
+  .report-link { display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 9px; border: 1.5px solid #e2e6f0; background: #ffffff; margin-bottom: 8px; text-decoration: none; transition: background .12s, border-color .12s; }
+  .report-link:hover { background: #f0f4ff; border-color: #b0c0e8; }
+  .report-icon { font-size: 20px; color: #555e7a; flex-shrink: 0; }
+  .report-name { font-size: 13px; font-weight: 600; color: #1a56db; }
+  .report-type { font-size: 11px; color: #888fa8; margin-top: 2px; }
+  .ext-icon { font-size: 13px; color: #aab0c8; margin-left: auto; }
+  .coming-soon { font-size: 13px; color: #888fa8; font-style: italic; padding: 8px 0; }
+  .divider { border: none; border-top: 1.5px solid #e2e6f0; margin: 16px 0; }
+
+  /* highlight for search matches in opened panels */
+  .search-highlight { background: #fef3c7; color: #92400e; border-radius: 2px; padding: 0 1px; }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <h1>Rep Reference Doc</h1>
+  <span class="badge">TimePayment</span>
+  <div class="search-wrap">
+    <i class="ti ti-search search-icon"></i>
+    <input class="search-input" id="searchInput" type="text" placeholder="Search anything…" oninput="doSearch(this.value)" onkeydown="searchKeydown(event)">
+    <button class="search-clear" id="searchClear" onclick="clearSearch()" title="Clear search">✕</button>
+  </div>
+</div>
+
+<!-- SEARCH RESULTS -->
+<div class="search-results" id="searchResults">
+  <div style="padding:16px 0 8px"><span id="searchHeading" style="font-size:14px;font-weight:600;color:#555e7a;"></span></div>
+  <div id="resultsList"></div>
+</div>
+
+<div class="nav" id="mainNav">
+  <button class="nav-btn active" onclick="show('pipeline',this)">Opportunity Stages</button>
+  <button class="nav-btn" onclick="show('daily',this)">Daily Structure</button>
+  <button class="nav-btn" onclick="show('terms',this)">Terms & Restrictions</button>
+  <button class="nav-btn" onclick="show('events',this)">Events & Messages</button>
+  <button class="nav-btn" onclick="show('syndication',this)">Syndication</button>
+  <button class="nav-btn" onclick="show('reports',this)">Reports</button>
+</div>
+
+<!-- PIPELINE -->
+<div id="pipeline" class="section active">
+  <div class="pipeline" id="stages"></div>
+</div>
+
+<!-- DAILY -->
+<div id="daily" class="section">
+  <h2>Daily structure</h2>
+  <div class="section-divider">First thing in the morning</div>
+  <div class="time-block">
+    <div class="time-label">Start here</div>
+    <div class="time-card">
+      <ul class="pri-list">
+        <li>Work new <strong>Approved</strong> opportunities</li>
+        <li>Review <strong>Syndication</strong> opportunities</li>
+        <li>Clear emails</li>
+      </ul>
+    </div>
+  </div>
+  <div class="section-divider">Work your queues</div>
+  <div class="time-block">
+    <div class="time-label">Queues</div>
+    <div class="time-card">
+      <ul class="pri-list">
+        <li>Pending Additional Info</li>
+        <li>Submit Invoice</li>
+        <li>Review Terms</li>
+        <li>Terms Accepted</li>
+        <li>Documents Sent</li>
+        <li>Documents Incomplete</li>
+      </ul>
+    </div>
+  </div>
+  <div class="section-divider">Throughout the day</div>
+  <div class="time-block">
+    <div class="time-label">Keep an eye out</div>
+    <div class="time-card">
+      <ul class="pri-list">
+        <li>Check for new <strong>Approved</strong> &amp; <strong>Syndication</strong> opportunities</li>
+        <li>Clear emails</li>
+        <li>Vendor management — follow ups and rapport building</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- TERMS -->
+<div id="terms" class="section">
+  <h2>Terms & restrictions</h2>
+  <p class="coming-soon">Program details, rebuttals, and selling ammo — coming soon.</p>
+  <h3>State restrictions</h3>
+  <div class="state-grid">
+    <div class="state-card">
+      <div class="state-card-label" style="color:#b45309">NOC — 3-day right to cancel</div>
+      <div class="state-desc">Deals cannot fund until 3 business days after signing.</div>
+      <div class="state-tags"><span class="stag stag-y">SD</span><span class="stag stag-y">KS</span><span class="stag stag-y">VT</span></div>
+    </div>
+    <div class="state-card">
+      <div class="state-card-label" style="color:#b91c1c">No SAC</div>
+      <div class="state-desc">Same-as-cash programs not available.</div>
+      <div class="state-tags"><span class="stag stag-r">KS</span><span class="stag stag-r">OH</span></div>
+    </div>
+    <div class="state-card">
+      <div class="state-card-label" style="color:#b45309">FMV Only</div>
+      <div class="state-desc">Only Fair Market Value program available.</div>
+      <div class="state-tags"><span class="stag stag-y">KS</span></div>
+    </div>
+    <div class="state-card">
+      <div class="state-card-label" style="color:#555e7a">Lease certificate required</div>
+      <div class="state-desc">Additional page — customer must type a statement.</div>
+      <div class="state-tags"><span class="stag stag-g">IL</span></div>
+    </div>
+    <div class="state-card full">
+      <div class="state-card-label" style="color:#b91c1c">No $1 Buyout ($BO)</div>
+      <div class="state-desc">$1 buyout program not available in these states.</div>
+      <div class="state-tags">
+        <span class="stag stag-r">AK</span><span class="stag stag-r">AR</span><span class="stag stag-r">CA</span><span class="stag stag-r">CT</span><span class="stag stag-r">DC</span><span class="stag stag-r">GA</span><span class="stag stag-r">ID</span><span class="stag stag-r">IL</span><span class="stag stag-r">IA</span><span class="stag stag-r">KS</span><span class="stag stag-r">KY</span><span class="stag stag-r">MI</span><span class="stag stag-r">MN</span><span class="stag stag-r">MS</span><span class="stag stag-r">MT</span><span class="stag stag-r">NE</span><span class="stag stag-r">NV</span><span class="stag stag-r">NH</span><span class="stag stag-r">NJ</span><span class="stag stag-r">NM</span><span class="stag stag-r">NY</span><span class="stag stag-r">ND</span><span class="stag stag-r">OR</span><span class="stag stag-r">RI</span><span class="stag stag-r">TN</span><span class="stag stag-r">VT</span><span class="stag stag-r">VA</span><span class="stag stag-r">WA</span><span class="stag stag-r">WV</span>
+      </div>
+    </div>
+    <div class="state-card full danger-card">
+      <div class="state-card-label" style="color:#b91c1c">⚠ No deals at all — ND</div>
+      <div class="state-desc" style="margin:0">North Dakota: do not process any deals.</div>
+    </div>
+    <div class="state-card full">
+      <div class="state-card-label" style="color:#555e7a">Titled deal note</div>
+      <div class="state-desc" style="margin:0">Security deposit is not returned or applied to EPO buyout on titled deals.</div>
+    </div>
+  </div>
+</div>
+
+<!-- EVENTS -->
+<div id="events" class="section">
+  <h2>Events & Messages</h2>
+  <div class="em-card">
+    <div class="em-type em-int">Internal Note</div>
+    <div class="em-body">For your own records — the vendor <strong>cannot see this</strong>. Use for notes like "EU might want to switch vendors."<br><br>Select <strong>"Notify Workflow"</strong> if you need action from credit or workflow, e.g. "Please update the business name to XYZ."</div>
+  </div>
+  <div class="em-card">
+    <div class="em-type em-vend">Message to Vendor</div>
+    <div class="em-body">
+      <strong>Important:</strong> If the dropdown is set to "Complete," the vendor does <em>not</em> receive a message. Use "Complete" for your own general notes only.<br><br>
+      If you want the vendor to be notified, check <strong>"Send email on create?"</strong> to send it directly to them.
+      <div class="em-example">"Hey JP! We have this customer approved. I spoke to them — they'll confirm the order with you. Please submit the invoice when ready so I can go over terms and work on funding."</div>
+    </div>
+  </div>
+  <div class="em-card">
+    <div class="em-type em-int">Vendor notifications</div>
+    <div class="em-body">Go to <strong>Vendor Account → Contacts → Application Communication Preferences</strong> and confirm the <strong>"New Requirements"</strong> box is checked. Without this, your Events & Messages notes won't reach the vendor.</div>
+  </div>
+</div>
+
+<!-- SYNDICATION -->
+<div id="syndication" class="section">
+  <h2>Syndication</h2>
+  <p class="coming-soon">Content coming soon.</p>
+</div>
+
+<!-- REPORTS -->
+<div id="reports" class="section">
+  <h2>Reports</h2>
+  <h3>Salesforce</h3>
+  <a class="report-link" href="https://timepayment.lightning.force.com/lightning/r/Dashboard/01ZPg000001WyOfMAK/view?queryScope=userFolders" target="_blank">
+    <i class="ti ti-layout-dashboard report-icon"></i>
+    <div><div class="report-name">My Sales Dashboard</div><div class="report-type">Dashboard</div></div>
+    <i class="ti ti-external-link ext-icon"></i>
+  </a>
+  <a class="report-link" href="https://timepayment.lightning.force.com/lightning/r/Report/00O0z000005Y7hEEAS/view?queryScope=userFolders" target="_blank">
+    <i class="ti ti-building-store report-icon"></i>
+    <div><div class="report-name">My Vendor Accounts</div><div class="report-type">Report</div></div>
+    <i class="ti ti-external-link ext-icon"></i>
+  </a>
+  <a class="report-link" href="https://timepayment.lightning.force.com/lightning/r/Report/00OPg00000J0NzNMAV/view?queryScope=userFolders" target="_blank">
+    <i class="ti ti-building-store report-icon"></i>
+    <div><div class="report-name">My Vendor Accounts by Value</div><div class="report-type">Report</div></div>
+    <i class="ti ti-external-link ext-icon"></i>
+  </a>
+  <a class="report-link" href="https://timepayment.lightning.force.com/lightning/r/Dashboard/01ZPg00000303QnMAI/view" target="_blank">
+    <i class="ti ti-layout-dashboard report-icon"></i>
+    <div><div class="report-name">Sales Executive Dashboard</div><div class="report-type">Dashboard</div></div>
+    <i class="ti ti-external-link ext-icon"></i>
+  </a>
+  <h3>Power BI</h3>
+  <a class="report-link" href="http://powerbiprd01/PBI_Reports/powerbi/NextGen/Power%20BI%20Reports/Sales/Dealer%20Activity" target="_blank">
+    <i class="ti ti-chart-bar report-icon"></i>
+    <div><div class="report-name">Dealer Activity</div><div class="report-type">Power BI Report</div></div>
+    <i class="ti ti-external-link ext-icon"></i>
+  </a>
+</div>
+
+<script>
+/* ── STAGE DATA ── */
+const stages = [
+  { cls:"c-syn", num:"1", label:"Syndication", items:["Opportunities that might be good to syndicate land here instead of being reviewed by the TP credit team (on-book).","Review the applicant's <strong>credit, TIB, and general info</strong> to determine if there's a syndication partner we should send it to.","Reach out to the customer to gather any info needed.","See the <strong>Syndication tab</strong> for partner details and guidelines."], warn:"If there are no good syndication options, hit <strong>'Send back to credit'</strong> to have the TP credit team review it on-book." },
+  { cls:"c-rev", num:"2", label:"Underwriter Review", items:["The opportunity is currently in review with the <strong>credit team</strong>.","No action needed from you at this stage — await a credit decision."] },
+  { cls:"c-pend", num:"3", label:"Pending Additional Info", items:["Credit has requested more information. Reach out to the <strong>customer immediately</strong> to gather what's needed.","Follow up on this substage regularly to remind customers to send the required docs.","Once info is received, notify credit via an internal Events & Messages note (Notify Workflow)."] },
+  { cls:"c-app", num:"4", label:"Approved (Quoting)", items:["Move the substage to <strong>Submit Invoice</strong>.","Search the business address. Look up the POO on the Secretary of State (SOS) site — is the business active?","Review the Vendor Account. When was the last deal? Is their <strong>ACH account set up</strong>? Confirm contacts are correct and email notifications are set up.","Create an <strong>approval email</strong> with: approval amount, vendor contact info, and stips needed.","<strong>Call the customer</strong> — verify info on the app and let them know to get an equipment quote and send stips.","Log in Events & Messages: Add Communication → Message to Vendor → 'Left VM & sent email for quote, DL & EIN' → mark Complete."], tip:"If you want the vendor to be notified on your Events & Messages note, check 'Send email on create?' to send it directly to them." },
+  { cls:"c-inv", num:"5", label:"Submit Invoice", items:["<strong>Call & email every other day</strong> to remind the customer to get a quote from the vendor and send stips.","TP must own at least 51% of the order. Max customer down payment is 49%.","Soft costs or smallwares are items under $100 (pots, pans, serving dishes). Max 40% soft costs — items over $100 must make up 60% of the order.","Bill To: TimePayment Corp, 400 Trade Center STE 6950, Woburn MA 01801.","Ship To: Customer's legal business name and business address."], sub:true },
+  { cls:"c-term", num:"6", label:"Review Terms", items:["Once an invoice is received, move substage to <strong>Review Terms</strong>.","Create a <strong>terms email</strong> to the customer.","Check for: state restrictions, security deposit requirements, approval amount, and invoice validity.","Click 'Equipment Invoice' requirement → change from 'Received Pending Review' to <strong>'Sales Approved'</strong> (or you won't get notified if a new invoice is uploaded).","<strong>Call the customer</strong> to discuss term options.","Follow up until the customer is ready to proceed or wants to cancel."] },
+  { cls:"c-acc", num:"7", label:"Terms Accepted", items:["Customer has agreed to terms. Select their <strong>payment program & term</strong> in InfoHub — the substage will automatically move to Terms Accepted. Make sure to select the option with the <strong>Earlypay option</strong>.","If you have the invoice, POO, and POA — skip to Ready for Docs below.","If anything is still outstanding (POO, POA, revised invoice), stay in this substage and follow up until you have everything needed."] },
+  { cls:"c-docs", num:"8", label:"Ready for Docs", items:["Add an <strong>internal Events & Messages note → Notify Workflow</strong> with payment details: e.g. 'Ready for docs, 11k LPO EPO 12pts 21mo $XXX/mo. Thank you'","Move the substage to <strong>'Ready for Docs'</strong>. A doc specialist will send the docs to the customer and chatter you when sent."] },
+  { cls:"c-docs", num:"9", label:"Documents Sent", items:["Once docs are sent, <strong>send the EU the 'Docs Out' email template</strong>.","Follow up with a call to confirm they received the e-sign link. If they can't find it, chatter the doc specialist to resend.","Follow up on this substage until all signers have signed."], tip:"More than 1 signer? The first applicant signs first. After they complete, the second signer automatically receives their email." },
+  { cls:"c-comp", num:"10", label:"Documents Received", items:["The customer has signed the documents.","Await the <strong>funding team's review</strong>. They'll advise if anything else is needed.","They'll move the substage to Docs Incomplete if there's an issue — or fund the deal if everything is in order."] },
+  { cls:"c-pend", num:"11", label:"Documents Incomplete", items:["Reach out to the <strong>customer and/or vendor</strong> for whatever is needed.","Follow up on this substage until all items are gathered and the deal can fund."] },
+  { cls:"c-fund", num:"12", label:"Pending Funding Today", items:["View opportunities that have funded today.","If the vendor is one we don't work with often, <strong>confirm a funding notification was sent</strong> and follow up if needed.","If it was a <strong>100% prefund or Retail D&A</strong>, the vendor should see the funds within <strong>1–2 business days</strong>."] },
+  { cls:"c-del", num:"13", label:"Funded — Delivery Incomplete", items:["This deal requires <strong>verification that the equipment was delivered</strong>.","Notify both the <strong>vendor and customer</strong>.","Review the <strong>Funding Team's notes</strong> for specific instructions on how to proceed."] }
+];
+
+const invoiceSub = `<div class="sub-section"><div class="sub-title">Invoice Requirements</div><ul style="padding-left:18px;margin-bottom:10px"><li style="font-size:13px;color:#3a3f56;line-height:1.7;margin-bottom:5px">TP must own at least <strong>51%</strong> of the order. Max customer down payment is <strong>49%</strong>.</li><li style="font-size:13px;color:#3a3f56;line-height:1.7;margin-bottom:5px">A <strong>"soft cost"</strong> or <strong>"smallware"</strong> is any item under $100 (pots, pans, serving dishes, etc.). The order can only be <strong>40% soft costs</strong> — items over $100 must make up the remaining <strong>60%</strong>. We can't finance $5k worth of pans — nothing to secure the financing to. If an invoice is full of smallwares, the customer needs to add equipment or items over $100.</li></ul><div class="invoice-grid"><div><div class="invoice-label">Bill To</div><div class="invoice-val">TimePayment Corp<br>400 Trade Center STE 6950<br>Woburn, MA 01801</div></div><div><div class="invoice-label">Ship To</div><div class="invoice-val">Customer's legal business name<br>Business address</div></div></div><div class="info-box warn" style="margin-top:4px">If the full order amount exceeds your approval, you can ask for an increase via an Events & Messages Notify Workflow note. If we can't cover it, see if the customer can pay the balance to the vendor directly, or look into syndication options.</div></div>`;
+
+/* ── BUILD PIPELINE ── */
+const sc = document.getElementById('stages');
+stages.forEach((s,i)=>{
+  const wrap = document.createElement('div');
+  wrap.className = 'stage-wrap';
+  const sub = s.sub ? invoiceSub : '';
+  const tip = s.tip ? `<div class="info-box tip">${s.tip}</div>` : '';
+  const warn = s.warn ? `<div class="info-box warn">${s.warn}</div>` : '';
+  wrap.innerHTML = `
+    <div class="stage-row" onclick="tog(${i})">
+      <div class="stage-badge ${s.cls}"><span class="stage-num">${s.num}</span><span class="stage-name">${s.label}</span></div>
+      <div class="stage-arrow" id="arr-${i}">›</div>
+    </div>
+    <div class="stage-detail" id="det-${i}">
+      <ul>${s.items.map(x=>`<li>${x}</li>`).join('')}</ul>
+      ${sub}${tip}${warn}
+    </div>`;
+  sc.appendChild(wrap);
+});
+
+function tog(i){
+  document.getElementById('det-'+i).classList.toggle('open');
+  document.getElementById('arr-'+i).classList.toggle('open');
+}
+
+function show(id, btn){
+  clearSearch();
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(btn) btn.classList.add('active');
+}
+
+/* ── SEARCH INDEX ── */
+// Build a flat list of searchable records after DOM is ready
+const searchIndex = [];
+
+function stripHtml(html){ return html.replace(/<[^>]+>/g,''); }
+
+function buildIndex(){
+  // Pipeline stages
+  stages.forEach((s,i)=>{
+    const text = [s.label, ...s.items.map(stripHtml), s.tip||'', s.warn||'',
+      s.sub ? '51% soft cost smallware invoice bill to ship to TimePayment' : ''
+    ].join(' ');
+    searchIndex.push({ tab:'pipeline', tabLabel:'Opportunity Stages', title:`Stage ${s.num}: ${s.label}`, body: text, action: ()=>{ show('pipeline', document.querySelector('.nav-btn')); openStage(i); } });
+  });
+
+  // Daily structure
+  const dailyItems = [
+    { title:'Start of day', body:'email low-hanging fruit Approved Syndication morning priorities' },
+    { title:'Daily Priorities', body:'Approved Syndication Terms Accepted Docs Incomplete priorities order' },
+    { title:'Queue work', body:'substage list follow up nudge queue work throughout the day' },
+    { title:'Vendor management', body:'vendors check in build rapport room for growth vendor management' },
+    { title:'Note keeping', body:'Events Messages Add Communication Message to Vendor Complete notification prefs log call email VM' },
+  ];
+  dailyItems.forEach(d=>{
+    searchIndex.push({ tab:'daily', tabLabel:'Daily Structure', title:d.title, body:d.body, action:()=>{ show('daily', document.querySelectorAll('.nav-btn')[1]); } });
+  });
+
+  // Terms & restrictions
+  const termItems = [
+    { title:'NOC — 3-day right to cancel', body:'NOC notice of cancellation 3 day right to cancel SD KS VT South Dakota Kansas Vermont fund signing' },
+    { title:'No SAC (Same-as-Cash)', body:'SAC same as cash KS OH Kansas Ohio not available' },
+    { title:'FMV Only', body:'FMV fair market value KS Kansas only program' },
+    { title:'Lease Certificate Required', body:'lease certificate IL Illinois additional page statement' },
+    { title:'No $1 Buyout ($BO)', body:'dollar one buyout BO AK AR CA CT DC GA ID IL IA KS KY MI MN MS MT NE NV NH NJ NM NY ND OR RI TN VT VA WA WV Alaska Arkansas California Connecticut Georgia Idaho Illinois Iowa Kansas Kentucky Michigan Minnesota Mississippi Montana Nebraska Nevada New Hampshire New Jersey New Mexico New York North Dakota Oregon Rhode Island Tennessee Vermont Virginia Washington West Virginia' },
+    { title:'No deals — ND', body:'North Dakota ND no deals do not process' },
+    { title:'Titled deal note', body:'titled deal security deposit EPO buyout not returned not applied' },
+    { title:'Terms & programs', body:'programs rebuttals selling ammo LPO EPO FMV SAC buyout terms coming soon' },
+  ];
+  termItems.forEach(d=>{
+    searchIndex.push({ tab:'terms', tabLabel:'Terms & Restrictions', title:d.title, body:d.body, action:()=>{ show('terms', document.querySelectorAll('.nav-btn')[2]); } });
+  });
+
+  // Events & Messages
+  const emItems = [
+    { title:'Internal Note', body:'internal note vendor cannot see records EU notify workflow credit workflow update business name' },
+    { title:'Message to Vendor', body:'message to vendor Complete send email on create dropdown vendor notification example JP customer approved invoice' },
+    { title:'Vendor notifications', body:'vendor account contacts application communication preferences new requirements box checked notifications reach vendor' },
+  ];
+  emItems.forEach(d=>{
+    searchIndex.push({ tab:'events', tabLabel:'Events & Messages', title:d.title, body:d.body, action:()=>{ show('events', document.querySelectorAll('.nav-btn')[3]); } });
+  });
+
+  // Reports
+  const reportItems = [
+    { title:'My Sales Dashboard', body:'sales dashboard Salesforce report pin' },
+    { title:'My Vendor Accounts', body:'vendor accounts Salesforce report' },
+    { title:'My Vendor Accounts by Value', body:'vendor accounts by value Salesforce report' },
+    { title:'Sales Executive Dashboard', body:'sales executive dashboard Salesforce' },
+    { title:'Dealer Activity — Power BI', body:'dealer activity power BI report' },
+  ];
+  reportItems.forEach(d=>{
+    searchIndex.push({ tab:'reports', tabLabel:'Reports', title:d.title, body:d.body, action:()=>{ show('reports', document.querySelectorAll('.nav-btn')[5]); } });
+  });
+}
+
+function openStage(i){
+  const det = document.getElementById('det-'+i);
+  const arr = document.getElementById('arr-'+i);
+  if(!det.classList.contains('open')){
+    det.classList.add('open');
+    arr.classList.add('open');
+  }
+  setTimeout(()=>{ det.scrollIntoView({ behavior:'smooth', block:'center' }); }, 80);
+}
+
+function highlight(text, query){
+  if(!query) return text;
+  const escaped = query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  return text.replace(new RegExp('('+escaped+')', 'gi'), '<mark>$1</mark>');
+}
+
+let searchTimeout;
+function doSearch(val){
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(()=>{ runSearch(val); }, 120);
+  document.getElementById('searchClear').style.display = val ? 'block' : 'none';
+}
+
+function runSearch(val){
+  const q = val.trim().toLowerCase();
+  const resultsPanel = document.getElementById('searchResults');
+  const nav = document.getElementById('mainNav');
+  const sections = document.querySelectorAll('.section');
+
+  if(!q){
+    resultsPanel.classList.remove('active');
+    nav.style.display = '';
+    sections.forEach(s=>{ if(s.id==='pipeline') s.classList.add('active'); else s.classList.remove('active'); });
+    document.querySelector('.nav-btn').classList.add('active');
+    return;
+  }
+
+  // Hide normal tabs, show results panel
+  nav.style.display = 'none';
+  sections.forEach(s=>s.classList.remove('active'));
+  resultsPanel.classList.add('active');
+
+  const words = q.split(/\s+/).filter(Boolean);
+  const matches = searchIndex.filter(item=>{
+    const haystack = (item.title + ' ' + item.body).toLowerCase();
+    return words.every(w => haystack.includes(w));
+  });
+
+  document.getElementById('searchHeading').textContent =
+    matches.length ? `${matches.length} result${matches.length===1?'':'s'} for "${val}"` : '';
+
+  const list = document.getElementById('resultsList');
+  if(!matches.length){
+    list.innerHTML = `<div class="no-results">No results for "<strong>${val}</strong>" — try a different term</div>`;
+    return;
+  }
+
+  list.innerHTML = matches.map((m,idx)=>`
+    <div class="result-item" onclick="goToResult(${idx}_${q.replace(/\W/g,'_')})">
+      <div class="result-tab">${m.tabLabel}</div>
+      <div class="result-title">${highlight(m.title, val)}</div>
+      <div class="result-snippet">${highlight(m.body.slice(0,160).replace(/\s+/g,' '), val)}…</div>
+    </div>
+  `).join('');
+
+  // store matches for click handler
+  window._searchMatches = matches;
+  window._searchQuery = val;
+
+  // re-attach click handlers
+  list.querySelectorAll('.result-item').forEach((el,idx)=>{
+    el.onclick = ()=>{
+      const m = window._searchMatches[idx];
+      clearSearch();
+      m.action();
+    };
+  });
+}
+
+function searchKeydown(e){
+  if(e.key==='Escape') clearSearch();
+}
+
+function clearSearch(){
+  document.getElementById('searchInput').value = '';
+  document.getElementById('searchClear').style.display = 'none';
+  document.getElementById('searchResults').classList.remove('active');
+  document.getElementById('mainNav').style.display = '';
+  document.querySelectorAll('.section').forEach(s=>{
+    if(s.id==='pipeline') s.classList.add('active'); else s.classList.remove('active');
+  });
+  document.querySelectorAll('.nav-btn').forEach((b,i)=>{ b.classList.toggle('active', i===0); });
+}
+
+buildIndex();
+</script>
+</body>
+</html>
